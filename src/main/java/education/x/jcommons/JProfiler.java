@@ -1,7 +1,7 @@
 package education.x.jcommons;
 
 /**
- * JKVS
+ * JProfiler
  */
-public class JKVS {
+public class JProfiler {
 }
