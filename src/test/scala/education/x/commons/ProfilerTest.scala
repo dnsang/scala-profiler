@@ -3,49 +3,37 @@ package education.x.commons
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.Future
+import org.scalatest.concurrent.ScalaFutures._
 
 class ProfilerTest extends AnyFunSuite {
 
   implicit val ec = scala.concurrent.ExecutionContext.global
   test("Test Profiler") {
 
-    Profiler("ProfilerTest::testSyncFunc")(
-      () => {
-        println("execution")
-      }
-    )
-    Profiler("ProfilerTest::xtestSyncFunc")(
-      () => {
-        println("execution")
-      }
-    )
-
-    val fValue = Profiler("ProfilerTest::testAsyncFunc") {
-      asyncFn(3)
+    val sumValue = Profiler("ProfilerTest.sum") {
+      sum(100)
+    }
+    val fSumValue = Profiler("ProfilerTest::asyncSum") {
+      aSum(100)
     }
 
-    fValue.onComplete(f => {
-      println(s"Async Value = ${f.get}")
-    })
+
+    whenReady(fSumValue) {
+      result => assert(result == sumValue)
+    }
 
     Profiler.disable()
 
 
-    Profiler("ProfilerTest::testSyncFunc")(
-      () => {
-        println("execution")
-      }
-    )
+    Profiler("ProfilerTest.sum") {
+      sum(100)
+    }
 
     Profiler.enable()
 
-    Profiler("ProfilerTest::testSyncFunc")(
-      () => {
-        println("execution")
-      }
-    )
-
-    Thread.sleep(5000)
+    Profiler("ProfilerTest.sum") {
+      sum(100)
+    }
 
 
     println(Profiler.report())
@@ -54,18 +42,16 @@ class ProfilerTest extends AnyFunSuite {
 
   }
 
-  def asyncFn(n: Int): Future[Int] = Future {
-    println("Start asyncFunc")
-    var sum = 0
-    for (i <- 1 to n) {
-      print(".")
-      sum += i
-      Thread.sleep(1000)
-    }
-    println()
-    println("Stop asyncFunc")
-    sum
-
+  def sum(n: Int): Int = {
+    require(n >= 0)
+    if (n == 0) 0 else n + sum(n - 1)
   }
+
+  def aSum(n: Int): Future[Int] = {
+    Future {
+      sum(n)
+    }
+  }
+
 
 }
