@@ -8,7 +8,7 @@
     <artifactId>profiler</artifactId>
     <version>0.1-SNAPSHOT</version>
     <name>Scala-Profiler</name>
-    <description>a scala profiler to measure function execution time.</description>
+    <description>a scala profiler to measure function execution executionTime.</description>
     <url>https://github.com/dnsang/scala-profiler</url>
 
     <licenses>

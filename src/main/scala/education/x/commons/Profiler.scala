@@ -2,34 +2,40 @@ package education.x.commons
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Profiler {
+trait Profiler {
 
-  implicit val ec = ExecutionContext.global
+  def apply[T](f: => T)(implicit ec: ExecutionContext = ExecutionContext.global): T
 
-
-  def apply[A](f: => A): A = {
-    println("apply  sync")
-    f
-  }
-
-
-  def apply[A](f: => Future[A]): Future[A] = {
-    println("apply  async")
-    f.onComplete(_ => {
-      println(s"async completed")
-    })
-    f
-  }
+  def apply[T](f: => Future[T])(implicit ec: ExecutionContext = ExecutionContext.global): Future[T]
 }
 
 
 object Profiler {
 
-  implicit val ex = ExecutionContext.global
+  val measureService: MeasureService = new CumulativeMeasureService
 
+  def apply(funcName: String): Profiler = {
 
-  def apply(key: String): Profiler = {
-    new Profiler()
+    val profileId = measureService.startMeasure(funcName)
+
+    new Profiler() {
+
+      override def apply[T](f: => T)(implicit ec: ExecutionContext): T = {
+
+        try {
+          f
+        } finally {
+          measureService.stopMeasure(profileId)
+        }
+      }
+
+      override def apply[T](f: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
+
+        f.onComplete(_ => {
+          measureService.stopMeasure(profileId)
+        })
+        f
+      }
+    }
   }
-
 }
