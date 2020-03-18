@@ -4,9 +4,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait Profiler {
 
-  def apply[T](f: => T)(implicit ec: ExecutionContext = ExecutionContext.global): T
+  def apply[T](f: => T)(implicit ec: ExecutionContext): T
 
-  def apply[T](f: => Future[T])(implicit ec: ExecutionContext = ExecutionContext.global): Future[T]
+  def apply[T](f: => Future[T])(implicit ec: ExecutionContext): Future[T]
 }
 
 
@@ -16,26 +16,30 @@ object Profiler {
 
   def apply(funcName: String): Profiler = {
 
-    val profileId = measureService.startMeasure(funcName)
+    measureService.startMeasure(funcName)
 
     new Profiler() {
 
       override def apply[T](f: => T)(implicit ec: ExecutionContext): T = {
-
+        val t1 = System.currentTimeMillis()
         try {
           f
         } finally {
-          measureService.stopMeasure(profileId)
+          measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
         }
       }
 
       override def apply[T](f: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
-
+        val t1 = System.currentTimeMillis()
         f.onComplete(_ => {
-          measureService.stopMeasure(profileId)
+          measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
         })
         f
       }
     }
   }
+
+  def report(): String = measureService.reportAsText()
+
+  def reportAsHtml(): String = measureService.reportAsHtml()
 }

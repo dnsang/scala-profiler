@@ -21,13 +21,14 @@ class ProfilerTest extends AnyFunSuite {
 
   implicit val ec = scala.concurrent.ExecutionContext.global
   test("ASync Profiler") {
-    Profiler("name")(
+
+    Profiler("ProfilerTest::testSyncFunc")(
       () => {
         println("execution")
       }
     )
 
-    val fValue = Profiler("name") {
+    val fValue = Profiler("ProfilerTest::testAsyncFunc") {
       asyncFn(3)
     }
 
@@ -37,6 +38,9 @@ class ProfilerTest extends AnyFunSuite {
 
 
     Thread.sleep(5000)
+
+
+    println(Profiler.report())
 
   }
 
