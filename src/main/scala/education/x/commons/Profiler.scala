@@ -1,5 +1,7 @@
 package education.x.commons
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Profiler {
@@ -14,27 +16,37 @@ object Profiler {
 
   val measureService: MeasureService = new CumulativeMeasureService
 
+  val isEnable: AtomicBoolean = new AtomicBoolean(true)
+
   def apply(funcName: String): Profiler = {
 
-    measureService.startMeasure(funcName)
 
     new Profiler() {
 
       override def apply[T](f: => T)(implicit ec: ExecutionContext): T = {
-        val t1 = System.currentTimeMillis()
-        try {
-          f
-        } finally {
-          measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
-        }
+        if (isEnable.get()) {
+
+          val t1 = System.currentTimeMillis()
+          try {
+            measureService.startMeasure(funcName)
+            f
+          } finally {
+            measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
+          }
+        } else f
+
+
       }
 
       override def apply[T](f: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
-        val t1 = System.currentTimeMillis()
-        f.onComplete(_ => {
-          measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
-        })
-        f
+        if (isEnable.get()) {
+          measureService.startMeasure(funcName)
+          val t1 = System.currentTimeMillis()
+          f.onComplete(_ => {
+            measureService.stopMeasure(funcName, System.currentTimeMillis() - t1)
+          })
+          f
+        } else f
       }
     }
   }
@@ -42,4 +54,14 @@ object Profiler {
   def report(): String = measureService.reportAsText()
 
   def reportAsHtml(): String = measureService.reportAsHtml()
+
+  def enable(): Unit = isEnable.set(true)
+
+  def disable(): Unit = isEnable.set(false)
+
+  def getHistory(funcName: String): List[Record] = measureService.getHistory(funcName)
+
+  def getHistory(): Map[String, List[Record]]= measureService.getHistory()
+
+
 }

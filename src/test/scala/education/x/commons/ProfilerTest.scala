@@ -3,26 +3,18 @@ package education.x.commons
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.Future
-import org.scalatest.concurrent._
 
 class ProfilerTest extends AnyFunSuite {
 
-  //
-  //  test("Sync Profiler") {
-  //
-  //    println("start profiler")
-  //    Profiler("test.sync_profiler") {
-  //      println("inner method is executed")
-  //    }
-  //    println("stop profiler")
-  //
-  //  }
-
-
   implicit val ec = scala.concurrent.ExecutionContext.global
-  test("ASync Profiler") {
+  test("Test Profiler") {
 
     Profiler("ProfilerTest::testSyncFunc")(
+      () => {
+        println("execution")
+      }
+    )
+    Profiler("ProfilerTest::xtestSyncFunc")(
       () => {
         println("execution")
       }
@@ -36,14 +28,31 @@ class ProfilerTest extends AnyFunSuite {
       println(s"Async Value = ${f.get}")
     })
 
+    Profiler.disable()
+
+
+    Profiler("ProfilerTest::testSyncFunc")(
+      () => {
+        println("execution")
+      }
+    )
+
+    Profiler.enable()
+
+    Profiler("ProfilerTest::testSyncFunc")(
+      () => {
+        println("execution")
+      }
+    )
 
     Thread.sleep(5000)
 
 
     println(Profiler.report())
+    println(Profiler.getHistory("ProfilerTest::testSyncFunc"))
+    println(Profiler.getHistory())
 
   }
-
 
   def asyncFn(n: Int): Future[Int] = Future {
     println("Start asyncFunc")

@@ -1,12 +1,10 @@
 package education.x.commons
 
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.{AtomicLong, LongAdder}
-import java.util.function.BiConsumer
+import java.util.concurrent.atomic.LongAdder
 
-import scala.collection.mutable
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
-
 
 trait MeasureService {
 
@@ -18,20 +16,11 @@ trait MeasureService {
 
   def reportAsHtml(): String
 
-  def disable(funcName: String)
-
-  def enable(funcName: String)
-
-  def disableAll()
-
-  def enableAll()
-
-
   def formatTable(table: Seq[Seq[Any]]): String = {
     if (table.isEmpty) ""
     else {
       // Get column widths based on the maximum cell width in each column (+2 for a one character padding on each side)
-      val colWidths = table.transpose.map(_.map(cell => if (cell == null) 0 else cell.toString.length).max + 2)
+      val colWidths: Seq[Int] = table.transpose.map(_.map(cell => if (cell == null) 0 else cell.toString.length).max + 2)
       // Format each row
       val rows = table.map(_.zip(colWidths).map { case (item, size) => (" %-" + (size - 1) + "s").format(item) }
         .mkString("|", "|", "|"))
@@ -42,12 +31,16 @@ trait MeasureService {
     }
   }
 
+  def getHistory(funcName: String): List[Record]
+
+  def getHistory(): Map[String, List[Record]]
+
 }
 
 
 case class Record(atTime: Long, executionTime: Long)
 
-class MeasureValue(funcName: String) {
+class MeasureValue(val funcName: String) {
   val maxHistoryRecord: Int = System.getProperty("ProfilerMaxHistory", "1000").toInt
   val totalTime = new LongAdder()
   val numCurrentPending = new LongAdder()
@@ -88,11 +81,10 @@ class CumulativeMeasureService extends MeasureService {
     val header = Seq("Function", "Total Time (ms)", "Total Hit", "Avg (ms)", "Num Pending")
     val report = ListBuffer[Seq[Any]]()
     report.append(header)
-    measureValueMap.forEach(new BiConsumer[String, MeasureValue] {
-      override def accept(k: String, v: MeasureValue): Unit = {
-        val avg = if (v.totalHit.longValue() == 0) 0 else v.totalTime.longValue() / v.totalHit.longValue()
-        report.append(Seq(k, v.totalTime, v.totalHit, avg, v.numCurrentPending.longValue()))
-      }
+
+    measureValueList().foreach(v => {
+      val avg = if (v.totalHit.longValue() == 0) 0 else v.totalTime.longValue() / v.totalHit.longValue()
+      report.append(Seq(v.funcName, v.totalTime, v.totalHit, avg, v.numCurrentPending.longValue()))
     })
 
     formatTable(report.toList)
@@ -100,12 +92,21 @@ class CumulativeMeasureService extends MeasureService {
 
   override def reportAsHtml(): String = ???
 
-  override def disable(funcName: String): Unit = ???
+  override def getHistory(funcName: String): List[Record] = {
+    val value = measureValueMap.get(funcName)
+    if (value != null) {
+      value.historyRecords.toList
+    } else scala.collection.immutable.List()
+  }
 
-  override def enable(funcName: String): Unit = ???
+  override def getHistory(): Map[String, List[Record]] = {
+    measureValueMap.asScala.toMap.map(f => (f._1, getHistory(f._1)))
+  }
 
-  override def disableAll(): Unit = ???
-
-  override def enableAll(): Unit = ???
+  private def measureValueList(): List[MeasureValue] = {
+    measureValueMap.asScala
+      .toList
+      .sortBy(f => f._1).map(_._2)
+  }
 
 }
