@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>education.x.common</groupId>
-    <artifactId>profiler</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <artifactId>scala-profiler</artifactId>
+    <version>0.1</version>
     <name>Scala-Profiler</name>
     <description>a scala profiler to measure function execution executionTime.</description>
     <url>https://github.com/dnsang/scala-profiler</url>
