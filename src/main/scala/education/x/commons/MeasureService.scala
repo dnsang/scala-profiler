@@ -1,5 +1,7 @@
 package education.x.commons
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
@@ -97,9 +99,9 @@ class CumulativeMeasureService extends MeasureService {
   override def reportAsHtml(): String = {
     val dict = TemplateDictionary.create()
 
-    for((v, i) <- measureValueList().zipWithIndex) {
-      val avg = if(v.totalHit.longValue() == 0) 0 else v.totalTime.longValue() / v.totalHit.longValue()
-      val historyRecords = v.historyRecords.map(r => "[" + r.atTime + "," + r.executionTime + "]").mkString("[", ",", "]")
+    for ((v, i) <- measureValueList().zipWithIndex) {
+      val avg = if (v.totalHit.longValue() == 0) 0 else v.totalTime.longValue() / v.totalHit.longValue()
+      val historyRecords = v.historyRecords.map(r => "[" + r.atTime + ", " + r.executionTime + "]").mkString("[", ", ", "]")
       val highestTimeReq = v.historyRecords.maxBy(_.executionTime).executionTime
       val lastReqExecTime = v.historyRecords.head.executionTime
       val sec = dict.addSection("MeasureValues")
@@ -112,7 +114,7 @@ class CumulativeMeasureService extends MeasureService {
       sec.setVariable("highestTmReq", highestTimeReq.toString)
       sec.setVariable("totalTmReq", v.totalTime.toString)
       sec.setVariable("reqRate", avg.toString)
-      sec.setVariable("tmRate", (1000/avg).toString)
+      sec.setVariable("tmRate", (1000 / avg).toString)
       sec.setVariable("historyRecords", historyRecords)
     }
 

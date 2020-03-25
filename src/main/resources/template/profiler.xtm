@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,82 +11,97 @@
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <script src="https://code.highcharts.com/highcharts.js"></script>
 
-
     <!-- CSS Files -->
     <style>
         table {
             border-collapse: collapse;
         }
-        table td, table th {
+
+        table td,
+        table th {
             border: 1px solid black;
         }
+
         table thead tr:first-child th {
             border-top: 0;
             border-right: 0;
             border-left: 0;
         }
-        .btn{
+
+        .btn {
             height: 40px;
             line-height: 40px;
             padding: 0 10px;
             font-size: 14px;
             margin: 0;
-            border:none;
+            border: none;
         }
-        .btn:focus{
+
+        .btn:focus {
             outline: none;
         }
-        .inner{
+
+        .inner {
             display: flex;
         }
-        .inner > button{
+
+        .inner > button {
             font-size: 14px;
             border: none;
             cursor: pointer;
         }
-        .inner > button:focus{
+
+        .inner > button:focus {
             outline: none;
         }
-        .btn-group{
+
+        .btn-group {
             display: block;
         }
-        .btn.active{
+
+        .btn.active {
             background: #30333a;
             color: #fff;
         }
-        #container > div{
+
+        #container > div {
             width: 100% !important;
             min-width: 100%;
             text-align: center !important;
         }
-
     </style>
-  </head>
-  <body>
-    <table style="width:100%" >
+</head>
+
+<body>
+    <table style="width:100%">
         <thead>
-        <tr>
-            <th colspan="9" style="padding: 30px 0 10px;">
-                <div style="display: block;float:left">Request Profiling</div>
-                <div style="display: block;float:right">
-                    <div aria-label="Basic example" class="btn-group" role="group" style="box-shadow: unset;">
-                        <button class="btn active">Enable</button>
-                        <button class="btn">Disable</button>
+            <tr>
+                <th colspan="9" style="padding: 30px 0 10px;">
+                    <div style="display: block;float:left">Request Profiling</div>
+                    <div style="display: block;float:right">
+                        <div aria-label="Basic example" class="btn-group" role="group" style="box-shadow: unset;">
+                            <button class="btn active">Enable</button>
+                            <button class="btn">Disable</button>
+                        </div>
                     </div>
-                </div>
-            </th>
-        </tr>
-        <tr style="background-color: paleturquoise">
-            <th>No</th>
-            <th>Name</th>
-            <th>TotalReq</th>
-            <th>PendingReq</th>
-            <th>LastTmReq<br>(milisecs)</th>
-            <th>HighestTmReq<br>(milisecs)</th>
-            <th>TotalTmReq <br>(milisecs)</th>
-            <th>Request Rate<br>(req/second)</th>
-            <th>Time Rate<br>(milisecs/req)</th>
-        </tr>
+                </th>
+            </tr>
+            <tr style="background-color: paleturquoise">
+                <th>No</th>
+                <th>Name</th>
+                <th>TotalReq</th>
+                <th>PendingReq</th>
+                <th>LastTmReq
+                    <br>(milisecs)</th>
+                <th>HighestTmReq
+                    <br>(milisecs)</th>
+                <th>TotalTmReq
+                    <br>(milisecs)</th>
+                <th>Request Rate
+                    <br>(req/second)</th>
+                <th>Time Rate
+                    <br>(milisecs/req)</th>
+            </tr>
         </thead>
         <tbody style="text-align: right">
 
@@ -116,29 +132,26 @@
         </tbody>
     </table>
 
-
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
     <!--  -->
     <script>
         // TOGGLE BUTTON
-        $('.btn-group button').on('click', function(e){
+        $('.btn-group button').on('click', function(e) {
             e.preventDefault();
 
-            if(!$(this).hasClass('active')){
+            if (!$(this).hasClass('active')) {
                 $(this).addClass('active');
                 $(this).siblings().removeClass('active');
             }
         })
 
-
-
         //
 
         function viewChart(id) {
 
-        var x = document.getElementById("chart_" + id);
+            var x = document.getElementById("chart_" + id);
             if (x.style.display === "none") {
                 x.style.display = "contents";
             } else {
@@ -146,42 +159,81 @@
             }
         }
 
-
         //
 
         document.addEventListener('DOMContentLoaded', function() {
 
-         {{#MeasureValues}}
+            {{#MeasureValues}}
 
-         Highcharts.chart('container_{{=id}}' , {
-            chart: {
-               type: 'line'
-            },
-            title: {
-                text: ''
-            },
-            xAxis: {
-               title: {
-                  text: 'At time'
-              }
-            },
-            yAxis: {
-               title: {
-                   text: 'Execution time (ms)'
-               }
-            },
-            series: [{
-               name: '{{=reqName}}',
-               data: {{=historyRecords}}
-            }]
-         });
+            Highcharts.chart('container_{{=id}}', {
+                chart: {
+                    zoomType: 'x'
+                },
+                title: {
+                    text: ''
+                },
+                subtitle: {
+                    text: document.ontouchstart === undefined ?
+                        'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                },
+                xAxis: {
+                    type: 'datetime',
+                    dateTimeLabelFormats: {
+                        month: '%e. %b',
+                        year: '%b'
+                    },
+                    title: {
+                        text: 'Date'
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Execution time (ms)'
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                plotOptions: {
+                    area: {
+                        fillColor: {
+                            linearGradient: {
+                                x1: 0,
+                                y1: 0,
+                                x2: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, Highcharts.getOptions().colors[0]],
+                                [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            ]
+                        },
+                        marker: {
+                            radius: 2,
+                            enable: true
+                        },
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                lineWidth: 1
+                            }
+                        },
+                        threshold: null
+                    }
+                },
 
-         {{/MeasureValues}}
+                series: [{
+                    name: '{{=reqName}}',
+                    type: 'area',
+                    data: {{=historyRecords}}
+                }]
+            });
 
+            {{/MeasureValues}}
 
-        });
+            });
     </script>
 
-
 </body>
+
 </html>
