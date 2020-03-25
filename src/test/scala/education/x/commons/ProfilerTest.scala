@@ -32,13 +32,40 @@ class ProfilerTest extends AnyFunSuite {
     Profiler.enable()
 
     Profiler("ProfilerTest.sum") {
-      sum(100)
+      sum(1200)
+    }
+    Profiler("ProfilerTest.sum") {
+      sum(1003)
+    }
+    Profiler("ProfilerTest.sum") {
+      sum(1040)
+    }
+    Profiler("ProfilerTest.sum") {
+      sum(5100)
+    }
+    Profiler("ProfilerTest::asyncSum") {
+      aSum(100)
+    }
+    Profiler("ProfilerTest::asyncSum") {
+      aSum(100)
+    }
+    Profiler("ProfilerTest::asyncSum") {
+      aSum(200)
+    }
+    Profiler("ProfilerTest::asyncSum") {
+      aSum(300)
+    }
+    Profiler("ProfilerTest::asyncSum") {
+      aSum(400)
     }
 
 
+
+
     println(Profiler.report())
-    println(Profiler.getHistory("ProfilerTest::testSyncFunc"))
+    println(Profiler.getHistory("ProfilerTest.sum"))
     println(Profiler.getHistory())
+    println(Profiler.reportAsHtml())
 
   }
 
