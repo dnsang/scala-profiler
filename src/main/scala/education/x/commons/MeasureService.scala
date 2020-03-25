@@ -3,6 +3,8 @@ package education.x.commons
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
 
+import hapax.{TemplateDictionary, TemplateResourceLoader}
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
@@ -62,6 +64,8 @@ class MeasureValue(val funcName: String) {
 class CumulativeMeasureService extends MeasureService {
 
   val measureValueMap: ConcurrentHashMap[String, MeasureValue] = new ConcurrentHashMap[String, MeasureValue]()
+  protected val loader = TemplateResourceLoader.create("template/")
+  protected val tmpl = loader.getTemplate("profiler")
 
   def getMeasureValue(funcName: String): MeasureValue = {
     if (!measureValueMap.containsKey(funcName))
@@ -90,7 +94,30 @@ class CumulativeMeasureService extends MeasureService {
     formatTable(report.toList)
   }
 
-  override def reportAsHtml(): String = ???
+  override def reportAsHtml(): String = {
+    val dict = TemplateDictionary.create()
+
+    for((v, i) <- measureValueList().zipWithIndex) {
+      val avg = if(v.totalHit.longValue() == 0) 0 else v.totalTime.longValue() / v.totalHit.longValue()
+      val historyRecords = v.historyRecords.map(r => "[" + r.atTime + "," + r.executionTime + "]").mkString("[", ",", "]")
+      val highestTimeReq = v.historyRecords.maxBy(_.executionTime).executionTime
+      val lastReqExecTime = v.historyRecords.head.executionTime
+      val sec = dict.addSection("MeasureValues")
+
+      sec.setVariable("id", i.toString)
+      sec.setVariable("reqName", v.funcName)
+      sec.setVariable("totalReq", v.totalHit.toString)
+      sec.setVariable("pendingReq", v.numCurrentPending.toString)
+      sec.setVariable("lastTmReq", lastReqExecTime.toString)
+      sec.setVariable("highestTmReq", highestTimeReq.toString)
+      sec.setVariable("totalTmReq", v.totalTime.toString)
+      sec.setVariable("reqRate", avg.toString)
+      sec.setVariable("tmRate", (1000/avg).toString)
+      sec.setVariable("historyRecords", historyRecords)
+    }
+
+    tmpl.renderToString(dict)
+  }
 
   override def getHistory(funcName: String): List[Record] = {
     val value = measureValueMap.get(funcName)

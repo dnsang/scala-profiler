@@ -79,6 +79,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- local install -->
+        <dependency>
+            <groupId>education.x</groupId>
+            <artifactId>hapax</artifactId>
+            <version>2</version>
+        </dependency>
+
     </dependencies>
 
     <!--<repositories>-->
